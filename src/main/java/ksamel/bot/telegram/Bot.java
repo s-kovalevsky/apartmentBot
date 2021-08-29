@@ -17,7 +17,7 @@ import java.util.Map;
 import java.util.concurrent.TimeUnit;
 
 public final class Bot extends TelegramLongPollingCommandBot {
-    private Logger logger = LoggerFactory.getLogger(Bot.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(Bot.class);
 
     private static Integer defaultPriceFrom = 80;
     private static Integer defaultPriceTo = 140;
@@ -27,34 +27,31 @@ public final class Bot extends TelegramLongPollingCommandBot {
     private final String BOT_NAME;
     private final String BOT_TOKEN;
 
-    /**
-     * Ключ - уникальный id чата
-     */
-    private static Map<Long, UserHandler> tasks;
+    private static Map<Long, UserFetchHandler> tasks;
 
     public Bot(String botName, String botToken) {
         super();
-        logger.debug("Конструктор суперкласса отработал");
+        LOGGER.debug("Конструктор суперкласса отработал");
         this.BOT_NAME = botName;
         this.BOT_TOKEN = botToken;
-        logger.debug("Имя и токен присвоены");
+        LOGGER.debug("Имя и токен присвоены");
 
         register(new StartCommand("start", "Старт"));
-        logger.debug("Команда start создана");
+        LOGGER.debug("Команда start создана");
 
         register(new ParamsCommand("/params", "Параметры"));
-        logger.debug("Команда params создана");
+        LOGGER.debug("Команда params создана");
 
         register(new FetchCommand("/fetch", "Проверить"));
-        logger.debug("Команда doFetch создана");
+        LOGGER.debug("Команда doFetch создана");
 
         register(new StopCommand("/stop", "Остоновить"));
-        logger.debug("Команда stop создана");
+        LOGGER.debug("Команда stop создана");
 
         register(new StatusCommand("/status", "Статус"));
-        logger.debug("Команда status создана");
+        LOGGER.debug("Команда status создана");
 
-        logger.info("Бот создан!");
+        LOGGER.info("Бот создан!");
         tasks = new HashMap<>();
     }
 
@@ -75,11 +72,11 @@ public final class Bot extends TelegramLongPollingCommandBot {
         Long chatId = msg.getChatId();
     }
 
-    public static Map<Long, UserHandler> getHandlers() {
+    public static Map<Long, UserFetchHandler> getHandlers() {
         return tasks;
     }
 
-    public static void setTasks(Map<Long, UserHandler> tasks) {
+    public static void setTasks(Map<Long, UserFetchHandler> tasks) {
         Bot.tasks = tasks;
     }
 
@@ -95,10 +92,10 @@ public final class Bot extends TelegramLongPollingCommandBot {
         return defaultTimeUnit;
     }
 
-    public static UserHandler getOrCreateHandler(Chat chat, AbsSender absSender) {
-        UserHandler handler = Bot.getHandlers().get(chat.getId());
+    public static UserFetchHandler getOrCreateHandler(Chat chat, AbsSender absSender) {
+        UserFetchHandler handler = Bot.getHandlers().get(chat.getId());
         if (handler == null){
-            handler = new UserHandler(Bot.getDefaultApartmentFilter(),
+            handler = new UserFetchHandler(Bot.getDefaultApartmentFilter(),
                     new ArrayList<>(),
                     chat.getId(),
                     absSender,

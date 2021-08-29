@@ -14,7 +14,8 @@ public class Apartment {
     public Apartment() {
     }
 
-    public Apartment(Double price, String source, Integer apartmentId, String link, Date updateDate, String address) {
+    public Apartment(Double price, String source, Integer apartmentId,
+                     String link, Date updateDate, String address) {
         this.price = price;
         this.source = source;
         this.apartmentId = apartmentId;

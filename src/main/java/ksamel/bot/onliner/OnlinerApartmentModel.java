@@ -74,7 +74,6 @@ public class OnlinerApartmentModel {
     public static class Price {
         private Double amount;
         private String currency;
-//        private Map<String, >
 
         public Double getAmount() {
             return amount;

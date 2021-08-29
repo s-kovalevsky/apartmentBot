@@ -59,7 +59,15 @@ public class KufarApartmentModel {
     public void setPriceUsd(Double priceUsd) {
         this.priceUsd = priceUsd;
     }
-    //
+
+    public List<AccountParameters> getAccountParameters() {
+        return accountParameters;
+    }
+
+    public void setAccountParameters(List<AccountParameters> accountParameters) {
+        this.accountParameters = accountParameters;
+    }
+
     public static class AccountParameters {
         private String pl;
         private String vl;
@@ -106,13 +114,5 @@ public class KufarApartmentModel {
         public void setPu(String pu) {
             this.pu = pu;
         }
-    }
-
-    public List<AccountParameters> getAccountParameters() {
-        return accountParameters;
-    }
-
-    public void setAccountParameters(List<AccountParameters> accountParameters) {
-        this.accountParameters = accountParameters;
     }
 }
