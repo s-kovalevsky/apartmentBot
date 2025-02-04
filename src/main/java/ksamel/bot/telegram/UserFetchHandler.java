@@ -1,9 +1,13 @@
 package ksamel.bot.telegram;
 
+import static java.util.concurrent.Executors.newScheduledThreadPool;
+
 import ksamel.bot.core.Apartment;
 import ksamel.bot.core.ApartmentFetchService;
+import ksamel.bot.core.ApartmentFilter;
 import ksamel.bot.kufar.KufarApartmentFetchService;
 import ksamel.bot.onliner.OnlinerApartmentFetchService;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -16,30 +20,29 @@ import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 
 import java.util.concurrent.TimeUnit;
-import java.util.stream.Collectors;
 
-public class UserFetchHandler {
-    private static final Logger LOGGER = LoggerFactory.getLogger(UserFetchHandler.class);
-    private Integer priceFrom;
-    private Integer priceTo;
-    private Date updatedFrom;
-    private List<String> blockedLinks;
+@Slf4j
+public class UserHandler {
+
+    private final ApartmentFilter apartmentFilter;
+    private final List<String> blockedLinks;
+    private final Long chatId;
+    private final AbsSender absSender;
+    private final List<ApartmentFetchService> apartmentFetchServices;
+
     private int period;
     private TimeUnit timeUnit;
 
-    private final Long chatId;
-    private final AbsSender absSender;
-    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+    private final ScheduledExecutorService scheduler = newScheduledThreadPool(1);
     private ScheduledFuture<?> future;
-    private final List<ApartmentFetchService> apartmentFetchServices;
 
-    public UserFetchHandler(List<String> blockedLinks, Long chatId, AbsSender absSender, int period, TimeUnit timeUnit) {
+    public UserHandler(ApartmentFilter apartmentFilter, List<String> blockedLinks, Long chatId, AbsSender absSender, int period, TimeUnit timeUnit) {
+        this.apartmentFilter = apartmentFilter;
         this.blockedLinks = blockedLinks;
         this.chatId = chatId;
         this.absSender = absSender;
         this.period = period;
         this.timeUnit = timeUnit;
-
         this.apartmentFetchServices = new ArrayList<>();
         this.apartmentFetchServices.add(new OnlinerApartmentFetchService());
         this.apartmentFetchServices.add(new KufarApartmentFetchService());
@@ -53,26 +56,23 @@ public class UserFetchHandler {
         future = scheduler.scheduleAtFixedRate(this::doFetch, 0, period, timeUnit);
     }
 
-    public void doFetch() {
-        List<Apartment> apartments = new ArrayList<>();
-        updatedFrom = new Date();
+    public void doFetch(){
+        Set<Apartment> apartments = new LinkedHashSet<>();
         for (ApartmentFetchService service : apartmentFetchServices) {
             try {
-                apartments.addAll(service.getApartments(priceFrom, priceTo, updatedFrom));
+                apartments.addAll(service.getApartments(apartmentFilter));
             } catch (Exception e) {
-                String msg = String.format("Service: %s, exception: %s", service.getName(), e);
-                LOGGER.error(msg);
-                sendAnswer(msg);
+                log.error(service.getName() + " error: " + e.getMessage(), e);
+                sendAnswer(service.getName() + " error: " + e.getMessage());
             }
         }
-        apartments = apartments.stream()
-                .filter(a -> !blockedLinks.contains(a.getLink()))
-                .sorted(Comparator.comparing(Apartment::getUpdateDate))
-                .collect(Collectors.toList());
         for (Apartment apartment : apartments) {
+            if (blockedLinks.contains(apartment.getLink())){
+                continue;
+            }
             sendAnswer(apartment.toString());
         }
-        updatedFrom = new Date();
+        apartmentFilter.setUpdatedFrom(new Date());
     }
 
     public void stop() {
@@ -118,12 +118,16 @@ public class UserFetchHandler {
         }
     }
 
+    public ApartmentFilter getApartmentFilter() {
+        return apartmentFilter;
+    }
+
     public List<String> getBlockedLinks() {
         return blockedLinks;
     }
 
-    public String getStatus() {
-        if (future == null || future.isCancelled() || future.isDone()) {
+    public String getStatus(){
+        if (future == null || future.isCancelled() || future.isDone()){
             return "Stopped";
         }
         return "Running";

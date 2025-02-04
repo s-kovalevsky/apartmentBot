@@ -1,12 +1,11 @@
 package ksamel.bot.core;
 
 import com.google.gson.Gson;
+import java.io.IOException;
 import org.apache.http.client.fluent.Content;
 import org.apache.http.client.fluent.Request;
 import org.telegram.telegrambots.meta.api.objects.Message;
 import org.telegram.telegrambots.meta.api.objects.User;
-
-import java.io.IOException;
 
 public class Utils {
 
@@ -19,14 +18,14 @@ public class Utils {
                 String.format("%s %s", user.getLastName(), user.getFirstName());
     }
 
-    public static String doGetRequest(String url) throws IOException {
+    public static String doGet(String url) throws IOException {
         final Content getResult = Request.Get(url)
-                .setHeader("Accept", "application/json")
-                .execute().returnContent();
+                                         .setHeader("Accept", "application/json")
+                                         .execute().returnContent();
         return getResult.asString();
     }
 
-    public static <T> T doGetRequest(String url, Class<T> responseClass) throws IOException {
-        return new Gson().fromJson(doGetRequest(url), responseClass);
+    public static <T> T doGet(String url, Class<T> responseClass) throws IOException {
+        return new Gson().fromJson(doGet(url), responseClass);
     }
 }

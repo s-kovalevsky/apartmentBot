@@ -6,6 +6,7 @@ import java.util.Date;
 import java.util.List;
 
 public class KufarApartmentModel {
+
     @SerializedName("account_parameters")
     private List<AccountParameters> accountParameters;
     @SerializedName("ad_link")
