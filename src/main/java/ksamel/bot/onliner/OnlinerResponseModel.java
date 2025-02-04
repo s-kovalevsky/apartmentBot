@@ -4,6 +4,7 @@ import java.util.List;
 
 
 public class OnlinerResponseModel {
+
     private List<OnlinerApartmentModel> apartments;
     private Integer total;
     private Page page;

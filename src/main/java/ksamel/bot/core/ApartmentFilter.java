@@ -1,45 +1,18 @@
 package ksamel.bot.core;
 
+import java.util.Date;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.Date;
-
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class ApartmentFilter {
-    private Integer priceFrom;
-    private Integer priceTo;
+
+    private Integer priceUsdFrom;
+    private Integer priceUsdTo;
     private Date updatedFrom;
-    ApartmentFilter(){ }
-
-    public ApartmentFilter(Integer priceFrom, Integer priceTo, Date updatedFrom) {
-        this.priceFrom = priceFrom;
-        this.priceTo = priceTo;
-        this.updatedFrom = updatedFrom;
-    }
-
-    public Integer getPriceFrom() {
-        return priceFrom;
-    }
-
-    public void setPriceFrom(Integer priceFrom) {
-        this.priceFrom = priceFrom;
-    }
-
-    public Integer getPriceTo() {
-        return priceTo;
-    }
-
-    public void setPriceTo(Integer priceTo) {
-        this.priceTo = priceTo;
-    }
-
-    public Date getUpdatedFrom() {
-        return updatedFrom;
-    }
-
-    public void setUpdatedFrom(Date updatedFrom) {
-        this.updatedFrom = updatedFrom;
-    }
 }

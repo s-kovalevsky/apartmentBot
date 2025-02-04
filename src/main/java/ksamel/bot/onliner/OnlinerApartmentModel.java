@@ -5,6 +5,7 @@ import com.google.gson.annotations.SerializedName;
 import java.util.Date;
 
 public class OnlinerApartmentModel {
+
     private Integer id;
     private Price price;
     private Location location;

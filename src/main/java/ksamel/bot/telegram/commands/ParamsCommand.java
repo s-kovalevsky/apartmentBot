@@ -3,8 +3,7 @@ package ksamel.bot.telegram.commands;
 import ksamel.bot.core.Utils;
 import ksamel.bot.telegram.Bot;
 import ksamel.bot.telegram.UserHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.bots.AbsSender;
@@ -15,9 +14,8 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-
+@Slf4j
 public class ParamsCommand extends ServiceCommand {
-    private Logger logger = LoggerFactory.getLogger(StartCommand.class);
 
     public ParamsCommand(String identifier, String description) {
         super(identifier, description);
@@ -26,7 +24,7 @@ public class ParamsCommand extends ServiceCommand {
     @Override
     public void execute(AbsSender absSender, User user, Chat chat, String[] strings) {
         String userName = Utils.getUserName(user);
-        logger.debug(String.format("Пользователь %s. Начато выполнение команды %s", userName,
+        log.debug(String.format("Пользователь %s. Начато выполнение команды %s", userName,
                 this.getCommandIdentifier()));
         UserHandler userHandler = Bot.getOrCreateHandler(chat, absSender);
         if (strings.length == 0) {
@@ -38,8 +36,8 @@ public class ParamsCommand extends ServiceCommand {
                                     "(-pr) period - *%s*\n" +
                                     "(-tu)(%s) timeUnit - *%s*\n" +
                                     "(-b) blockedLinks - *%s*\n",
-                            userHandler.getApartmentFilter().getPriceFrom().toString(),
-                            userHandler.getApartmentFilter().getPriceTo().toString(),
+                            userHandler.getApartmentFilter().getPriceUsdFrom().toString(),
+                            userHandler.getApartmentFilter().getPriceUsdTo().toString(),
                             new SimpleDateFormat("dd.MM.yyyy&HH:mm").format(userHandler.getApartmentFilter().getUpdatedFrom()),
                             userHandler.getPeriod(),
                             Arrays.stream(ChronoUnit.values()).skip(3).limit(5).map(ChronoUnit::toString).collect(Collectors.joining(", ")),
@@ -53,11 +51,11 @@ public class ParamsCommand extends ServiceCommand {
                 List<String> strings1 = List.of(strings);
                 if (strings1.contains("-pf")) {
                     Integer priceFrom = Integer.valueOf(strings1.get(strings1.indexOf("-pf") + 1));
-                    userHandler.getApartmentFilter().setPriceFrom(priceFrom);
+                    userHandler.getApartmentFilter().setPriceUsdFrom(priceFrom);
                 }
                 if (strings1.contains("-pt")) {
                     Integer priceTo = Integer.valueOf(strings1.get(strings1.indexOf("-pt") + 1));
-                    userHandler.getApartmentFilter().setPriceTo(priceTo);
+                    userHandler.getApartmentFilter().setPriceUsdTo(priceTo);
                 }
                 if (strings1.contains("-d")) {
                     SimpleDateFormat simpleDateFormat = new SimpleDateFormat("dd.MM.yyyy&HH:mm");
@@ -78,11 +76,11 @@ public class ParamsCommand extends ServiceCommand {
                 }
             }
             catch (Exception e){
-                logger.debug("error " + e.getMessage());
+                log.debug("error " + e.getMessage());
             }
 
         }
-        logger.debug(String.format("Пользователь %s. Завершено выполнение команды %s", userName,
+        log.debug(String.format("Пользователь %s. Завершено выполнение команды %s", userName,
                 this.getCommandIdentifier()));
     }
 }

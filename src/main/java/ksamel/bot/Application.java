@@ -12,8 +12,12 @@ public class Application {
 
     public static void main(String[] args) {
         try {
+//            String name = getenv.get("BOT_NAME");
+//            String token = getenv.get("TELEGRAM_TOKEN");
+            String name = "apartment_ksamel_bot";
+            String token = "1929781185:AAHvCimL0YVXkE2-gW6zjvUM4CTo2AuPei0";
             TelegramBotsApi botsApi = new TelegramBotsApi(DefaultBotSession.class);
-            botsApi.registerBot(new Bot(getenv.get("BOT_NAME"), getenv.get("BOT_TOKEN")));
+            botsApi.registerBot(new Bot(name, token));
         } catch (TelegramApiException e) {
             e.printStackTrace();
         }

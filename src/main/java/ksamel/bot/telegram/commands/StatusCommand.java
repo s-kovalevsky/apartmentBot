@@ -3,14 +3,13 @@ package ksamel.bot.telegram.commands;
 import ksamel.bot.core.Utils;
 import ksamel.bot.telegram.Bot;
 import ksamel.bot.telegram.UserHandler;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.extern.slf4j.Slf4j;
 import org.telegram.telegrambots.meta.api.objects.Chat;
 import org.telegram.telegrambots.meta.api.objects.User;
 import org.telegram.telegrambots.meta.bots.AbsSender;
 
+@Slf4j
 public class StatusCommand extends ServiceCommand {
-    private Logger logger = LoggerFactory.getLogger(StatusCommand.class);
 
     public StatusCommand(String identifier, String description) {
         super(identifier, description);
@@ -21,11 +20,11 @@ public class StatusCommand extends ServiceCommand {
         UserHandler handler = Bot.getOrCreateHandler(chat, absSender);
         String userName = Utils.getUserName(user);
 
-        logger.debug(String.format("Пользователь %s. Начато выполнение команды %s", userName,
-                this.getCommandIdentifier()));
+        log.debug(String.format("Пользователь %s. Начато выполнение команды %s", userName,
+                                this.getCommandIdentifier()));
         sendAnswer(absSender, chat.getId(), this.getCommandIdentifier(), userName,
-                handler.getStatus());
-        logger.debug(String.format("Пользователь %s. Завершено выполнение команды %s", userName,
-                this.getCommandIdentifier()));
+                   handler.getStatus());
+        log.debug(String.format("Пользователь %s. Завершено выполнение команды %s", userName,
+                                this.getCommandIdentifier()));
     }
 }

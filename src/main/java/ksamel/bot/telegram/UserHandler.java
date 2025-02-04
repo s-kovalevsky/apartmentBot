@@ -1,10 +1,13 @@
 package ksamel.bot.telegram;
 
+import static java.util.concurrent.Executors.newScheduledThreadPool;
+
 import ksamel.bot.core.Apartment;
 import ksamel.bot.core.ApartmentFetchService;
 import ksamel.bot.core.ApartmentFilter;
 import ksamel.bot.kufar.KufarApartmentFetchService;
 import ksamel.bot.onliner.OnlinerApartmentFetchService;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.telegram.telegrambots.meta.api.methods.send.SendMessage;
@@ -18,17 +21,20 @@ import java.util.concurrent.ScheduledFuture;
 
 import java.util.concurrent.TimeUnit;
 
+@Slf4j
 public class UserHandler {
-    private final static Logger logger = LoggerFactory.getLogger(UserHandler.class);
+
     private final ApartmentFilter apartmentFilter;
     private final List<String> blockedLinks;
     private final Long chatId;
     private final AbsSender absSender;
-    private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+    private final List<ApartmentFetchService> apartmentFetchServices;
+
     private int period;
     private TimeUnit timeUnit;
+
+    private final ScheduledExecutorService scheduler = newScheduledThreadPool(1);
     private ScheduledFuture<?> future;
-    private List<ApartmentFetchService> apartmentFetchServices;
 
     public UserHandler(ApartmentFilter apartmentFilter, List<String> blockedLinks, Long chatId, AbsSender absSender, int period, TimeUnit timeUnit) {
         this.apartmentFilter = apartmentFilter;
@@ -56,7 +62,7 @@ public class UserHandler {
             try {
                 apartments.addAll(service.getApartments(apartmentFilter));
             } catch (Exception e) {
-                logger.error(service.getName() + " error: " + e.getMessage());
+                log.error(service.getName() + " error: " + e.getMessage(), e);
                 sendAnswer(service.getName() + " error: " + e.getMessage());
             }
         }
