@@ -2,14 +2,15 @@ package ksamel.bot.kufar;
 
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 import ksamel.bot.core.Apartment;
 import ksamel.bot.core.ApartmentFetchService;
 import ksamel.bot.core.ApartmentFilter;
 import ksamel.bot.core.Utils;
+import ksamel.bot.kufar.KufarApartmentModel.Parameters;
 import lombok.extern.slf4j.Slf4j;
 
 @Slf4j
@@ -17,7 +18,8 @@ public class KufarApartmentFetchService implements ApartmentFetchService {
 
     private static final String NAME = "kufar";
     private static final String URL = "https://api.kufar.by/search-api/v2/search/rendered-paginated";
-    private static final String globalParams = "cat=1010&cmp=0&cur=USD&gtsy=country-belarus~province-minsk~locality-minsk&lang=ru&rms=v.or%3A1&rnt=1&size=30&typ=let";
+    private static final String URL_PREPOSITION = "https://api.kufar.by/search-api/v2/search/poleposition";
+    private static final String globalParams = "cat=1010&cmp=0&cur=USD&gtsy=country-belarus~province-minsk~locality-minsk&lang=ru&rms=v.or%3A1&rnt=1&size=5&typ=let";
 
     @Override
     public String getName() {
@@ -26,10 +28,9 @@ public class KufarApartmentFetchService implements ApartmentFetchService {
 
     @Override
     public List<Apartment> getApartments(ApartmentFilter apartmentFilter) throws IOException {
-        List<Apartment> apartments = new ArrayList<>();
+        List<Apartment> apartments;
         try {
             String params = globalParams;
-            List<String> paramsList = new ArrayList<>();
             if (apartmentFilter.getPriceUsdFrom() != null && apartmentFilter.getPriceUsdTo() != null) {
                 params += "&prc=r%3A" + apartmentFilter.getPriceUsdFrom() + "%2C" + apartmentFilter.getPriceUsdTo();
             } else if (apartmentFilter.getPriceUsdFrom() != null) {
@@ -39,17 +40,17 @@ public class KufarApartmentFetchService implements ApartmentFetchService {
             }
             KufarResponceModel responceModel = Utils.doGet(URL + "?" + params,
                                                            KufarResponceModel.class);
+            KufarResponceModel responceModelPrepositin = Utils.doGet(URL_PREPOSITION + "?" + params,
+                                                                     KufarResponceModel.class);
 
-            Stream<KufarApartmentModel> apartmentModelStream = responceModel.getAds().stream()
-                                                                            .filter(a -> !a.getCompanyAd());
-            if (apartmentFilter.getUpdatedFrom() != null) {
-                apartmentModelStream = apartmentModelStream
-                        .filter(x -> !apartmentFilter.getUpdatedFrom().after(x.getListTime()));
-
-            }
-            apartments = apartmentModelStream.map(this::toApartment).collect(Collectors.toList());
-        } catch (IOException e) {
-            log.error(NAME + " error: " + e.getMessage());
+            List<KufarApartmentModel> apartmentModelStream = new ArrayList<>();
+            apartmentModelStream.addAll(responceModel.getAds());
+            apartmentModelStream.addAll(responceModelPrepositin.getAds());
+            apartments = apartmentModelStream.stream()
+                                             .map(this::toApartment)
+                                             .collect(Collectors.toList());
+        } catch (Exception e) {
+            log.error(NAME + " error: {}", e.getMessage());
             throw e;
         }
         return apartments;
@@ -57,16 +58,37 @@ public class KufarApartmentFetchService implements ApartmentFetchService {
 
     public Apartment toApartment(KufarApartmentModel apartmentModel) {
         String address = "";
+        Double longitude = null;
+        Double latitude = null;
         if (apartmentModel.getAccountParameters() != null) {
-            Optional<KufarApartmentModel.AccountParameters> address1 = apartmentModel.getAccountParameters().stream()
-                                                                                     .filter(x -> x.getP().equals("address"))
-                                                                                     .findFirst();
+            Optional<Parameters> address1 = apartmentModel.getAccountParameters().stream()
+                                                          .filter(x -> x.getP().equals("address"))
+                                                          .findFirst();
             if (address1.isPresent()) {
-                address = address1.get().getV();
+                address = String.valueOf(address1.get().getV());
             }
+            Optional<Object> coordinates = apartmentModel.getAdParameters()
+                                                         .stream()
+                                                         .filter(parameters -> parameters.getP().equals("coordinates"))
+                                                         .map(Parameters::getV)
+                                                         .findFirst();
+            if (coordinates.isPresent()) {
+                Object coordinateObject = coordinates.get();
+                if (coordinateObject instanceof Iterable<?> iterable) {
+                    Iterator<?> iterator = iterable.iterator();
+                    longitude = Double.valueOf(String.valueOf(iterator.next()));
+                    latitude = Double.valueOf(String.valueOf(iterator.next()));
+                }
+            }
+
         }
-        return new Apartment(apartmentModel.getPriceUsd() / 100, NAME, apartmentModel.getId(),
-                             apartmentModel.getLink(), apartmentModel.getListTime(),
-                             address);
+        return new Apartment(apartmentModel.getPriceUsd() / 100,
+                             NAME,
+                             apartmentModel.getId(),
+                             apartmentModel.getLink(),
+                             apartmentModel.getListTime(),
+                             address,
+                             longitude,
+                             latitude);
     }
 }

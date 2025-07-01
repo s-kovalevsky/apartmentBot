@@ -1,9 +1,10 @@
 package ksamel.bot.onliner;
 
+import static java.util.stream.Collectors.toList;
+
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import ksamel.bot.core.Apartment;
 import ksamel.bot.core.ApartmentFetchService;
@@ -19,7 +20,7 @@ public class OnlinerApartmentFetchService implements ApartmentFetchService {
 
     @Override
     public List<Apartment> getApartments(ApartmentFilter apartmentFilter) throws IOException {
-        List<Apartment> apartments = new ArrayList<>();
+        List<Apartment> apartments;
         try {
             List<String> paramsList = new ArrayList<>();
             if (apartmentFilter.getPriceUsdFrom() != null) {
@@ -28,7 +29,9 @@ public class OnlinerApartmentFetchService implements ApartmentFetchService {
             if (apartmentFilter.getPriceUsdTo() != null) {
                 paramsList.add("price[max]=" + apartmentFilter.getPriceUsdTo());
             }
-            paramsList.add("currency=usd&rent_type[]=1_room&order=last_time_up:desc");
+            paramsList.add("currency=usd&rent_type[]=1_room&rent_type[]=2_rooms&only_owner=true&order=last_time_up:desc");
+            paramsList.add("bounds[lb][lat]=53.672307307332225&bounds[lb][long]=27.402334948196245&bounds[rt][lat]=54.208239284622316&bounds[rt][long]=27.809515734329057");
+            paramsList.add("v=0.12507621617511955");
 
             OnlinerResponseModel onlinerResponseModel;
             List<OnlinerApartmentModel> onlinerApartments = new ArrayList<>();
@@ -51,8 +54,8 @@ public class OnlinerApartmentFetchService implements ApartmentFetchService {
                         .filter(x -> !apartmentFilter.getUpdatedFrom().after(x.getLastTimeUp()));
 
             }
-            apartments = onlinerApartmentModelStream.map(this::toApartment).collect(Collectors.toList());
-        } catch (IOException e) {
+            apartments = onlinerApartmentModelStream.map(this::toApartment).collect(toList());
+        } catch (Exception e) {
             log.error(NAME + " error: " + e.getMessage());
             throw e;
         }
@@ -60,7 +63,14 @@ public class OnlinerApartmentFetchService implements ApartmentFetchService {
     }
 
     public Apartment toApartment(OnlinerApartmentModel onlinerApartmentModel) {
-        return new Apartment(onlinerApartmentModel.getPrice().getAmount(), NAME, onlinerApartmentModel.getId(), onlinerApartmentModel.getUrl(), onlinerApartmentModel.getLastTimeUp(), onlinerApartmentModel.getLocation().getAddress());
+        return new Apartment(onlinerApartmentModel.getPrice().getAmount(),
+                             NAME,
+                             onlinerApartmentModel.getId(),
+                             onlinerApartmentModel.getUrl(),
+                             onlinerApartmentModel.getLastTimeUp(),
+                             onlinerApartmentModel.getLocation().getAddress(),
+                             onlinerApartmentModel.getLocation().getLongitude(),
+                             onlinerApartmentModel.getLocation().getLatitude());
     }
 
     public String getName() {
