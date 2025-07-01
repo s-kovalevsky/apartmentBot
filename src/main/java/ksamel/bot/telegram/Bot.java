@@ -1,9 +1,12 @@
 package ksamel.bot.telegram;
 
+import static java.util.List.of;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 import ksamel.bot.core.ApartmentFilter;
 import ksamel.bot.telegram.commands.FetchCommand;
@@ -21,10 +24,17 @@ import org.telegram.telegrambots.meta.bots.AbsSender;
 @Slf4j
 public final class Bot extends TelegramLongPollingCommandBot {
 
-    private static Integer defaultPriceFrom = 150;
-    private static Integer defaultPriceTo = 350;
-    private static int defaultPeriod = 1;
-    private static TimeUnit defaultTimeUnit = TimeUnit.MINUTES;
+    public static Integer defaultPriceFrom = 150;
+    public static Integer defaultPriceTo = 350;
+    public static int defaultPeriod = 1;
+    public static TimeUnit defaultTimeUnit = TimeUnit.MINUTES;
+    public static Set<String> defaultDistricts = Set.of("Центральный район",
+                                                        "Советский район",
+                                                        "Первомайский район",
+                                                        "Партизанский район",
+                                                        "деревня Боровляны",
+                                                        "агрогородок Лесной",
+                                                        "деревня Копище");
 
     private final String BOT_NAME;
     private final String BOT_TOKEN;
@@ -78,32 +88,38 @@ public final class Bot extends TelegramLongPollingCommandBot {
         return tasks;
     }
 
-    public static void setTasks(Map<Long, UserHandler> tasks) {
-        Bot.tasks = tasks;
-    }
-
     public static ApartmentFilter getDefaultApartmentFilter() {
-        return new ApartmentFilter(defaultPriceFrom, defaultPriceTo, new Date());
+        return new ApartmentFilter(defaultPriceFrom, defaultPriceTo, new Date(), defaultDistricts);
     }
 
-    public static int getDefaultPeriod() {
-        return defaultPeriod;
+    public void setupDefaultTasks() {
+        of(807873919L, 675083518L).forEach(this::setupDefaultTask);
     }
 
-    public static TimeUnit getDefaultTimeUnit() {
-        return defaultTimeUnit;
+    public void setupDefaultTask(Long chatId) {
+        var handler = getOrCreateHandler(chatId, this);
+        handler.start();
+        handler.sendAnswer("Bot was restarted");
+        handler.sendFilterParameters();
     }
 
     public static UserHandler getOrCreateHandler(Chat chat, AbsSender absSender) {
-        UserHandler handler = Bot.getHandlers().get(chat.getId());
+        // 807873919
+        // 675083518
+        log.info(chat.getId() + " " + chat.getUserName());
+        return getOrCreateHandler(chat.getId(), absSender);
+    }
+
+    public static UserHandler getOrCreateHandler(Long chatId, AbsSender absSender) {
+        UserHandler handler = Bot.getHandlers().get(chatId);
         if (handler == null) {
             handler = new UserHandler(Bot.getDefaultApartmentFilter(),
                                       new ArrayList<>(),
-                                      chat.getId(),
+                                      chatId,
                                       absSender,
-                                      Bot.getDefaultPeriod(),
-                                      Bot.getDefaultTimeUnit());
-            Bot.getHandlers().put(chat.getId(), handler);
+                                      Bot.defaultPeriod,
+                                      Bot.defaultTimeUnit);
+            Bot.getHandlers().put(chatId, handler);
         }
         return handler;
     }

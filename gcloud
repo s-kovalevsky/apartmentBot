@@ -1,0 +1,4 @@
+europe-west1-docker.pkg.dev/apartmentbot-450117/apartmentbotrepository/apartmentbot_img
+
+
+docker tag 6f3be5ef9504 europe-west1-docker.pkg.dev/apartmentbot-450117/apartmentbotrepository/apartmentbot_img

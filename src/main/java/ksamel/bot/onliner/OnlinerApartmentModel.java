@@ -3,6 +3,8 @@ package ksamel.bot.onliner;
 import com.google.gson.annotations.SerializedName;
 
 import java.util.Date;
+import lombok.Getter;
+import lombok.Setter;
 
 public class OnlinerApartmentModel {
 
@@ -93,16 +95,13 @@ public class OnlinerApartmentModel {
         }
     }
 
+    @Getter
+    @Setter
     public static class Location {
+
         private String address;
-
-        public String getAddress() {
-            return address;
-        }
-
-        public void setAddress(String address) {
-            this.address = address;
-        }
+        private Double longitude;
+        private Double latitude;
     }
 
     public static class Contact {
