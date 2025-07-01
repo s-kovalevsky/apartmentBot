@@ -93,7 +93,7 @@ public final class Bot extends TelegramLongPollingCommandBot {
     }
 
     public void setupDefaultTasks() {
-        of(807873919L, 675083518L).forEach(this::setupDefaultTask);
+        of(807873919L).forEach(this::setupDefaultTask);
     }
 
     public void setupDefaultTask(Long chatId) {
